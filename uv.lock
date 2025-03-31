@@ -300,4 +300,4 @@ requires-dist = [
 [[package]]
 name = "tinygrad"
 version = "0.10.2"
-source = { git = "https://github.com/tinygrad/tinygrad#3e1168ff5e33fbcbdd5e0dd14dba4ddd3d04a52e" }
+source = { git = "https://github.com/tinygrad/tinygrad#f277f407f29f2b880713d7493d64e3fc4ac0ad59" }

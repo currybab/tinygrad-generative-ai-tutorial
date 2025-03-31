@@ -4,10 +4,14 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["matplotlib>=3.10.1", "numpy>=2.2.4", "tinygrad>=0.10.2"]
+dependencies = [
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.4",
+    "tinygrad",
+]
 
 [tool.pylint.messages_control]
-disable = "C0114,C0115,C0116,C0103,C0104"
+disable = "C0114,C0115,C0116,C0103,C0104,W0621"
 
 [tool.uv.sources]
 tinygrad = { git = "https://github.com/tinygrad/tinygrad" }
