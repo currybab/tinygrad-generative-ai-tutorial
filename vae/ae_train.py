@@ -109,7 +109,9 @@ if __name__ == "__main__":
     def train_step(samples: Tensor) -> Tensor:
         opt.zero_grad()
         output, _ = model(X_train[samples])
-        loss = output.clip(1e-7, 1 - 1e-7).binary_crossentropy(X_train[samples])
+        loss = output.clip(1e-7, 1 - 1e-7).binary_crossentropy(
+            X_train[samples]
+        )  # add clip for numerical stability
         loss.backward()
         opt.step()
         return loss.realize()
