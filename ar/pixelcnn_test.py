@@ -74,7 +74,7 @@ class PixelCNNGenerator:
                     # Sample from the distribution and normalize
                     sampled_value = self.sample_from(probs, temperature)
                     normalized_value = sampled_value / PIXEL_LEVELS
-                    print(normalized_value)
+
                     # Update the image with the sampled pixel
                     image[0, 0, row, col] = normalized_value
 
@@ -193,7 +193,7 @@ def generate_and_visualize_fake_images(num_images=10):
 if __name__ == "__main__":
     # Try to generate images using a trained model
     if os.path.exists("model.safetensors"):
-        generate_random_images(num_images=1, temperature=0.8)
+        generate_random_images(num_images=10, temperature=0.8)
     else:
         # If no model is available, generate fake images for demonstration
         print(

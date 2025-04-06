@@ -16,12 +16,21 @@ class MaskedConv2d(nn.Conv2d):
     def __init__(self, mask_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert mask_type in {"A", "B"}
-        mask = Tensor.ones(self.weight.shape).contiguous().cast(dtypes.bool)
+        self.mask_type = mask_type
+
+    def __call__(self, x: Tensor) -> Tensor:
+        mask = Tensor.ones(self.weight.shape, requires_grad=False).contiguous()
         _, _, kH, kW = self.weight.shape
-        mask[:, :, kH // 2, kW // 2 + (mask_type == "B") :] = False
-        mask[:, :, kH // 2 + 1 :] = False
-        # self.mask = self.mask.cast(self.weight.dtype).requires_grad_(False)
-        self.weight.masked_select(mask)
+        mask[:, :, kH // 2, kW // 2 + (self.mask_type == "B") :] = 0.0
+        mask[:, :, kH // 2 + 1 :] = 0.0
+        return x.conv2d(
+            self.weight * mask,
+            self.bias,
+            self.groups,
+            self.stride,
+            self.dilation,
+            self.padding,
+        )
 
 
 class ResidualBlock:
@@ -90,13 +99,9 @@ if __name__ == "__main__":
 
     # preprocess: normalize and pad to 32x32
     def preprocess(x: Tensor) -> tuple[Tensor, Tensor]:
-        x_int = (
-            x.pad(((0, 0), (0, 0), (2, 2), (2, 2)))
-            .div(256 / PIXEL_LEVELS)
-            .cast(dtypes.int)
-        )
+        x_cut: Tensor = x.pad(((0, 0), (0, 0), (2, 2), (2, 2))).avg_pool2d((2, 2), 2)
+        x_int = x_cut.div(256 / PIXEL_LEVELS).cast(dtypes.int)
         x_float = x_int.div(PIXEL_LEVELS)
-        print(x_int[0, 0, 8].numpy(), x_float[0, 0, 8].numpy())
         return x_float, x_int
 
     X_train, X_target = preprocess(X_train)
@@ -110,7 +115,7 @@ if __name__ == "__main__":
     train_size = X_train.shape[0]
     batch_size = 100
     step_size = math.ceil(train_size / batch_size)
-    epochs = 0.5
+    epochs = 150
     print(
         f"train_size={train_size}, batch_size={batch_size}, step_size={step_size}, epochs={epochs}"
     )
@@ -134,7 +139,7 @@ if __name__ == "__main__":
         samples = Tensor.arange(batch, batch + batch_size)
         train_loss, output = train_step(samples)
         t.set_description(
-            f"loss: {train_loss.item():6.4f}, 16,16={output[0, 16, 16].numpy()}, real={X_target[0, 0, 16, 16].numpy()}"
+            f"loss: {train_loss.item():6.4f}, 8,8={output[0, 8, 8].numpy()}, real={X_target[0, 0, 8, 8].numpy()}"
         )
 
     # first we need the state dict of our model
